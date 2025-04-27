@@ -3,6 +3,7 @@ import {Conversation, type ConversationFlavor, conversations, createConversation
 require('dotenv').config();
 import { Bot, GrammyError, HttpError, Keyboard, type Context, session, type SessionFlavor } from "grammy";
 import { collaborateConversation } from "./conversations/collaborate";
+import {mainMenuKeyboard} from './keyboards/keyBoards';
 
 
 const token = process.env.BOT_TOKEN;
@@ -37,27 +38,14 @@ bot.use(conversations());
 bot.use(session({ initial }))
 bot.use(createConversation(collaborateConversation));
 
-bot.command("enter", async (ctx) => {
-  // Enter the function "hello" you declared.
-  await ctx.conversation.enter("hello");
-});
-
-export const mainMenuKeyboard = new Keyboard()
-  .text('🎉 Хочу співпрацювати').row()
-  .text('📍 Де здати сировину').row()
-  .text('🚚 Виклик за сировиною').row()
-  .text('🛠 Як підготувати сировину').row()
-  .text('💰 Ціни на сировину').text('📝 Залишити заявку').row()
-  .text('❓ FAQ').text('🗣 Оператор').resized()
-
 bot.api.setMyCommands([
   { command: 'main_menu', description: 'Головне Меню 📍' },
   { command: 'help',  description: 'Допомога ❓' },
 ])
 
-bot.hears('ID', async (ctx) => {
-  await ctx.reply('ID: ' + ctx.from?.id);
-})
+// bot.hears('ID', async (ctx) => {
+//   await ctx.reply('ID: ' + ctx.from?.id);
+// })
 
 bot.command('start', async (ctx) => {
   await ctx.reply(
@@ -137,5 +125,5 @@ bot.catch((err) => {
 
 // Запуск бота
 bot.start()
-  .then(() => console.log('✅ Бот запущен'))
-  .catch(err => console.error('Ошибка при запуске бота:', err));
+  .then(() => console.log('✅ Started bot'))
+  .catch(err => console.error('Bot startup error:', err));

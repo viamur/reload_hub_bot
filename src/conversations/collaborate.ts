@@ -1,65 +1,71 @@
-// src/conversations/collaborate.ts
 import { Conversation } from "@grammyjs/conversations";
-import { Keyboard } from "grammy";
-import { mainMenuKeyboard, MyContext } from "../index";
+import { MyContext } from "../index";
+import {
+  businessTypeKeyboard,
+  districtMenuKeyboard,
+  mainMenuKeyboard,
+  shareContactKeyboard
+} from '../keyboards/keyBoards';
+const adminId = process.env.ADMIN_ID;
 
-// Главное имя экспорта – совпадает с createConversation(...)
 export async function collaborateConversation(
   conversation: Conversation<MyContext, MyContext>,
   ctx: MyContext
 ) {
-  // Гарантируем, что в сессии есть объект collab
   if (!ctx.session) {
     ctx.session = {collab: { type: "", region: "", contact: "" }};
   }
 
-  // 1) Спрашиваем название компании (раньше был «тип»)
-  const typeKb = new Keyboard()
-    .text("Ресторан").text("Магазин").row()
-    .text("Виробництво").text("ОСББ").text("Інше").resized().oneTime()
-  await ctx.reply("🎉 Оберіть, будь ласка, тип вашого бізнесу:", { reply_markup: typeKb });
+  await ctx.reply("🎉 Оберіть, будь ласка, тип вашого бізнесу:", { reply_markup: businessTypeKeyboard.oneTime() });
   const nameMsg = await conversation.waitFor("message:text");
-  // Сохраняем временно в поле type (или создайте новое, если хотите)
   ctx.session.collab.type = nameMsg.message.text;
 
-  // 2) Спрашиваем район со списком кнопок
-  const districtKb = new Keyboard()
-    .text("Центрально-Міський район").row()
-    .text("Тернівський район").row()
-    .text("Інгулецький район").row()
-    .text("Покровський район").row()
-    .text("Довгинцівський район").row()
-    .text("Металургійний район").row();
-  await ctx.reply("📍 Оберіть ваш район:", { reply_markup: districtKb });
+  await ctx.reply("📍 Оберіть ваш район:", { reply_markup: districtMenuKeyboard.oneTime() });
   const districtMsg = await conversation.waitFor("message:text");
   ctx.session.collab.region = districtMsg.message.text;
 
-  // 3) Спрашиваем только телефон и просим через «Поделиться контактом»
-  const contactKb = new Keyboard().requestContact("📞 Поділитися номером").row();
   await ctx.reply(
     "Будь ласка, поділіться вашим номером телефону:",
-    { reply_markup: contactKb }
+    { reply_markup: shareContactKeyboard }
   );
   const contactUpdate = await conversation.waitFor("message:contact");
   ctx.session.collab.contact = contactUpdate.message.contact.phone_number;
 
   // TODO: здесь sheetService.addCollaboration(ctx.session.collab)
 
-  // Подтверждение пользователю
   await ctx.reply(
     `✅ *Дякуємо! Ось дані вашої компанії:* \n` +
-    `🏢 *Назва:* ${ctx.session.collab.type}\n` +
+    `🏢 *Тип:* ${ctx.session.collab.type}\n` +
     `📍 *Район:* ${ctx.session.collab.region}\n` +
     `📞 *Телефон:* +${ctx.session.collab.contact}`,
     { parse_mode: "Markdown" }
   );
 
-  // Очищаем сессию
+  if (adminId) {
+    await ctx.api.sendMessage(adminId,
+    `✅*Заявка на співпрацю:*\n` +
+    `*Тип:* ${ctx.session.collab.type}\n` +
+    `*Район:* ${ctx.session.collab.region}\n` +
+    `*Телефон:* +${ctx.session.collab.contact}\n\n` +
+    `*USER_NAME:* ${ctx.from?.username || ''}\n` +
+    `*FULL_NAME:* ${ctx.from?.first_name} ${ctx.from?.last_name || ''}\n` +
+    `*ID:* ${ctx.from?.id}\n` +
+    `*DATE:* ${new Date().toLocaleDateString('uk-UA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`,
+      { parse_mode: "Markdown" });
+  }
+
+
   ctx.session.collab.type = "";
   ctx.session.collab.region = "";
   ctx.session.collab.contact = "";
 
-  // Возвращаем в главное меню
+
   await ctx.reply("Повертаюсь у головне меню:", {
     reply_markup: mainMenuKeyboard,
   });
