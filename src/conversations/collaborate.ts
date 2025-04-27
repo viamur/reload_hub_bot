@@ -6,6 +6,7 @@ import {
   mainMenuKeyboard,
   shareContactKeyboard
 } from '../keyboards/keyBoards';
+import {getUserFullName} from '../utils/getUserFullName';
 const adminId = process.env.ADMIN_ID;
 
 export async function collaborateConversation(
@@ -48,7 +49,7 @@ export async function collaborateConversation(
     `*Район:* ${ctx.session.collab.region}\n` +
     `*Телефон:* +${ctx.session.collab.contact}\n\n` +
     `*USER_NAME:* ${ctx.from?.username || ''}\n` +
-    `*FULL_NAME:* ${ctx.from?.first_name} ${ctx.from?.last_name || ''}\n` +
+    `*FULL_NAME:* ${getUserFullName(ctx.from)}\n` +
     `*ID:* ${ctx.from?.id}\n` +
     `*DATE:* ${new Date().toLocaleDateString('uk-UA', {
       year: 'numeric',

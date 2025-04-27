@@ -1,9 +1,9 @@
-// src/index.ts
-import {Conversation, type ConversationFlavor, conversations, createConversation} from '@grammyjs/conversations';
+import {type ConversationFlavor, conversations, createConversation} from '@grammyjs/conversations';
 require('dotenv').config();
 import { Bot, GrammyError, HttpError, Keyboard, type Context, session, type SessionFlavor } from "grammy";
 import { collaborateConversation } from "./conversations/collaborate";
 import {mainMenuKeyboard} from './keyboards/keyBoards';
+import {getUserFullName} from './utils/getUserFullName';
 
 
 const token = process.env.BOT_TOKEN;
@@ -65,6 +65,25 @@ bot.command('help', async (ctx) => {
   await ctx.reply('help');
 });
 
+bot.command('admin', async (ctx) => {
+  if (!adminId) {
+    console.error('❌ empty ADMIN_ID in .env');
+    return;
+  }
+
+  if (!ctx.from) {
+    console.error('❌ ctx.from is undefined');
+    return;
+  }
+
+  if (adminId === String(ctx.from.id)) {
+    await ctx.reply('Welcome, admin!');
+  } else {
+    console.log(`❌ User ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`, 'color: red');
+    await ctx.api.sendMessage(adminId, `Користувач ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) намагався отримати доступ до адміністративної команди.`);
+  }
+});
+
 // bot.hears('ping', async (ctx) => {
 //   await ctx.reply('pong', {
 //     reply_parameters: {
@@ -102,8 +121,7 @@ bot.on('message:text', async ctx => {
       return ctx.reply('👉 Ви обрали “Оператор”. Переадресуємо…');
     default:
       if (adminId) {
-        const fullName = `${ctx.from?.first_name || ''} ${ctx.from?.last_name || ''}`.trim();
-        await ctx.api.sendMessage(adminId, `Новое сообщение от ${fullName}: ${ctx.message.text}`);
+        await ctx.api.sendMessage(adminId, `Новое сообщение от ${getUserFullName(ctx.from)}: ${ctx.message.text}`);
       }
       return;
   }
