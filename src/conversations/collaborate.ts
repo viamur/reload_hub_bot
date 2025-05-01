@@ -5,8 +5,9 @@ import {
   districtMenuKeyboard,
   mainMenuKeyboard,
   shareContactKeyboard
-} from '../keyboards/keyBoards';
+} from '../keyboards/replyKeyboards';
 import {getUserFullName} from '../utils/getUserFullName';
+require('dotenv').config();
 const adminId = process.env.ADMIN_ID;
 
 export async function collaborateConversation(
@@ -17,7 +18,7 @@ export async function collaborateConversation(
     ctx.session = {collab: { type: "", region: "", contact: "" }};
   }
 
-  await ctx.reply("🎉 Оберіть, будь ласка, тип вашого бізнесу:", { reply_markup: businessTypeKeyboard.oneTime() });
+  await ctx.reply("🏢 Оберіть, будь ласка, тип вашого бізнесу:", { reply_markup: businessTypeKeyboard.oneTime() });
   const nameMsg = await conversation.waitFor("message:text");
   ctx.session.collab.type = nameMsg.message.text;
 
@@ -27,38 +28,39 @@ export async function collaborateConversation(
 
   await ctx.reply(
     "Будь ласка, поділіться вашим номером телефону:",
-    { reply_markup: shareContactKeyboard }
+    { reply_markup: shareContactKeyboard.oneTime() }
   );
   const contactUpdate = await conversation.waitFor("message:contact");
   ctx.session.collab.contact = contactUpdate.message.contact.phone_number;
 
   // TODO: здесь sheetService.addCollaboration(ctx.session.collab)
 
+  console.log(JSON.stringify(ctx.session.collab));
   await ctx.reply(
     `✅ *Дякуємо! Ось дані вашої компанії:* \n` +
-    `🏢 *Тип:* ${ctx.session.collab.type}\n` +
-    `📍 *Район:* ${ctx.session.collab.region}\n` +
+    `🏢 *Тип:* ${ctx.session.collab.type} \n` +
+    `📍 *Район:* ${ctx.session.collab.region} \n` +
     `📞 *Телефон:* +${ctx.session.collab.contact}`,
     { parse_mode: "Markdown" }
   );
 
   if (adminId) {
-    await ctx.api.sendMessage(adminId,
-    `✅*Заявка на співпрацю:*\n` +
-    `*Тип:* ${ctx.session.collab.type}\n` +
-    `*Район:* ${ctx.session.collab.region}\n` +
-    `*Телефон:* +${ctx.session.collab.contact}\n\n` +
-    `*USER_NAME:* ${ctx.from?.username || ''}\n` +
-    `*FULL_NAME:* ${getUserFullName(ctx.from)}\n` +
-    `*ID:* ${ctx.from?.id}\n` +
-    `*DATE:* ${new Date().toLocaleDateString('uk-UA', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })}`,
-      { parse_mode: "Markdown" });
+    const data = {
+      type: ctx.session.collab.type,
+      region: ctx.session.collab.region,
+      contact: ctx.session.collab.contact,
+      user_name: ctx.from?.username || '',
+      full_name: getUserFullName(ctx.from),
+      user_id: ctx.from?.id || '-',
+      date: new Date().toLocaleDateString('uk-UA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    }
+    await ctx.api.sendMessage(adminId, JSON.stringify(data));
   }
 
 

@@ -1,9 +1,10 @@
 import {type ConversationFlavor, conversations, createConversation} from '@grammyjs/conversations';
 require('dotenv').config();
-import { Bot, GrammyError, HttpError, Keyboard, type Context, session, type SessionFlavor } from "grammy";
+import { Bot, GrammyError, HttpError, type Context, session, type SessionFlavor } from "grammy";
 import { collaborateConversation } from "./conversations/collaborate";
-import {mainMenuKeyboard} from './keyboards/keyBoards';
+import {mainMenuKeyboard} from './keyboards/replyKeyboards';
 import {getUserFullName} from './utils/getUserFullName';
+import {googleSheets} from './services/sheetService';
 
 
 const token = process.env.BOT_TOKEN;
@@ -40,16 +41,13 @@ bot.use(createConversation(collaborateConversation));
 
 bot.api.setMyCommands([
   { command: 'main_menu', description: 'Головне Меню 📍' },
-  { command: 'help',  description: 'Допомога ❓' },
+  { command: 'help',  description: 'Допомога ❓' }, // TODO: add contacts
 ])
 
-// bot.hears('ID', async (ctx) => {
-//   await ctx.reply('ID: ' + ctx.from?.id);
-// })
-
 bot.command('start', async (ctx) => {
+  await ctx.reply('Ласкаво просимо до бота з прийому вторсировини!');
   await ctx.reply(
-    'Ласкаво просимо до бота з прийому вторсировини! Оберіть, що вас цікавить:',
+    'Оберіть необхідний розділ з меню нижче 👇',
     { reply_markup: mainMenuKeyboard }
   );
 });
@@ -67,19 +65,19 @@ bot.command('help', async (ctx) => {
 
 bot.command('admin', async (ctx) => {
   if (!adminId) {
-    console.error('❌ empty ADMIN_ID in .env');
+    console.error('❌--empty ADMIN_ID in .env');
     return;
   }
 
   if (!ctx.from) {
-    console.error('❌ ctx.from is undefined');
+    console.error('❌--ctx.from is undefined');
     return;
   }
 
   if (adminId === String(ctx.from.id)) {
     await ctx.reply('Welcome, admin!');
   } else {
-    console.log(`❌ User ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`, 'color: red');
+    console.log(`❌--User ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`);
     await ctx.api.sendMessage(adminId, `Користувач ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) намагався отримати доступ до адміністративної команди.`);
   }
 });
@@ -101,6 +99,10 @@ bot.on("edited_message", async (ctx) => {
 
 bot.on('message:text', async ctx => {
   const txt = ctx.message.text;
+  if (ctx.message.reply_to_message) {
+    // If the message is a reply to another message, do nothing
+    return;
+  }
   switch (txt) {
     case '🎉 Хочу співпрацювати':
       await ctx.conversation.enter('collaborateConversation')
@@ -120,7 +122,7 @@ bot.on('message:text', async ctx => {
     case '🗣 Оператор':
       return ctx.reply('👉 Ви обрали “Оператор”. Переадресуємо…');
     default:
-      if (adminId) {
+      if (adminId && ctx.from && ctx.from.id === Number(adminId)) {
         await ctx.api.sendMessage(adminId, `Новое сообщение от ${getUserFullName(ctx.from)}: ${ctx.message.text}`);
       }
       return;
@@ -133,15 +135,23 @@ bot.catch((err) => {
   const error = err.error;
 
   if (error instanceof GrammyError) {
-    console.error('⚠️ Error in request:', error.description);
+    console.error('⚠️--Error in request:', error.description);
   } else if (error instanceof HttpError) {
-    console.error('⚠️ Could not contact Telegram:', error);
+    console.error('⚠️--Could not contact Telegram:', error);
   } else {
-    console.error('⚠️ Unknown error:', error);
+    console.error('⚠️--Unknown error:', error);
   }
 })
 
-// Запуск бота
-bot.start()
-  .then(() => console.log('✅ Started bot'))
-  .catch(err => console.error('Bot startup error:', err));
+async function init() {
+  try {
+    await googleSheets.initialize();
+    bot.start();
+
+    console.log('✅--Bot started successfully');
+  } catch (error) {
+    console.error('❌--Error initializing:', error);
+  }
+}
+
+init();
