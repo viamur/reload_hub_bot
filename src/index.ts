@@ -1,22 +1,19 @@
-import {type ConversationFlavor, conversations, createConversation} from '@grammyjs/conversations';
+import {conversations, createConversation} from '@grammyjs/conversations';
 import { Bot, GrammyError, HttpError, type Context, session, type SessionFlavor } from "grammy";
 import { collaborateConversation } from "./conversations/collaborate";
 import {mainMenuKeyboard} from './keyboards/replyKeyboards';
 import {getUserFullName} from './utils/getUserFullName';
-import {googleSheets} from './services/sheetService';
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import type {MyContext, MySession} from './types/types';
+import {commandStart} from './commands/index.js';
 
 
 const token = process.env.BOT_TOKEN;
 const adminId = process.env.ADMIN_ID;
 if (!token) {
-  console.error('❌ empty BOT_TOKEN in .env');
+  console.error('❌--empty BOT_TOKEN in .env');
   process.exit(1);
-}
-
-interface MySession {
-  collab: { type: string; region: string; contact: string };
 }
 
 // Install session middleware, and define the initial session value.
@@ -30,10 +27,6 @@ function initial(): MySession {
   };
 }
 
-type Session = Context & SessionFlavor<MySession>;
-
-export type MyContext = ConversationFlavor<Session>;
-
 const bot = new Bot<MyContext>(token);
 
 bot.use(conversations());
@@ -45,13 +38,7 @@ bot.api.setMyCommands([
   { command: 'help',  description: 'Допомога ❓' }, // TODO: add contacts
 ])
 
-bot.command('start', async (ctx) => {
-  await ctx.reply('Ласкаво просимо до бота з прийому вторсировини!');
-  await ctx.reply(
-    'Оберіть необхідний розділ з меню нижче 👇',
-    { reply_markup: mainMenuKeyboard }
-  );
-});
+bot.command('start', commandStart);
 
 bot.command('main_menu', async (ctx) => {
   await ctx.reply(
@@ -124,9 +111,8 @@ bot.on('message:text', async ctx => {
       return ctx.reply('👉 Ви обрали “Оператор”. Переадресуємо…');
     default:
       if (adminId && ctx.from && ctx.from.id === Number(adminId)) {
-        await ctx.api.sendMessage(adminId, `Новое сообщение от ${getUserFullName(ctx.from)}: ${ctx.message.text}`);
+        return ctx.api.sendMessage(adminId, `Новое сообщение от ${getUserFullName(ctx.from)}: ${ctx.message.text}`);
       }
-      return;
   }
 });
 
