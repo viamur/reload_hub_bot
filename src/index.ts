@@ -1,10 +1,11 @@
 import {type ConversationFlavor, conversations, createConversation} from '@grammyjs/conversations';
-require('dotenv').config();
 import { Bot, GrammyError, HttpError, type Context, session, type SessionFlavor } from "grammy";
 import { collaborateConversation } from "./conversations/collaborate";
 import {mainMenuKeyboard} from './keyboards/replyKeyboards';
 import {getUserFullName} from './utils/getUserFullName';
 import {googleSheets} from './services/sheetService';
+import 'dotenv/config';
+import mongoose from 'mongoose';
 
 
 const token = process.env.BOT_TOKEN;
@@ -144,11 +145,17 @@ bot.catch((err) => {
 })
 
 async function init() {
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    throw new Error('MongoDB URI doesn\'t exist');
+  }
+
   try {
-    await googleSheets.initialize();
+    await mongoose.connect(MONGODB_URI);
+    // await googleSheets.initialize();
     bot.start();
 
-    console.log('✅--Bot started successfully');
+    console.log('✅--MongoDB connected & bot started');
   } catch (error) {
     console.error('❌--Error initializing:', error);
   }

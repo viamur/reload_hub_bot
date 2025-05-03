@@ -6,6 +6,7 @@ declare global {
       BOT_TOKEN: string;
       ADMIN_ID: string;
       GOOGLE_SPREADSHEET_ID: string;
+      MONGODB_URI: string;
     }
   }
 }
