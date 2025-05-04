@@ -70,49 +70,66 @@ bot.command('admin', async (ctx) => {
   }
 });
 
-// bot.hears('ping', async (ctx) => {
-//   await ctx.reply('pong', {
-//     reply_parameters: {
-//       message_id: ctx.msg?.message_id
-//     }
-//   });
-// })
-
 bot.on("edited_message", async (ctx) => {
   // Get the new, edited, text of the message.
   const editedText = ctx.msg.text;
   console.log(`editedText: ${editedText}`);
 });
 
-
 bot.on('message:text', async ctx => {
   const txt = ctx.message.text;
-  if (ctx.message.reply_to_message) {
-    // If the message is a reply to another message, do nothing
-    return;
-  }
-  switch (txt) {
-    case '🎉 Хочу співпрацювати':
-      await ctx.conversation.enter('collaborateConversation')
-      break;
-    case '📍 Де здати сировину':
-      return ctx.reply('👉 Ви обрали “Де здати сировину”. Список точок…');
-    case '🚚 Виклик за сировиною':
-      return ctx.reply('👉 Ви обрали “Виклик за сировиною”. Питаємо адресу…');
-    case '💰 Ціни на сировину':
-      return ctx.reply('👉 Ви обрали “Ціни на сировину”. Отаке…');
-    case '🛠 Як підготувати сировину':
-      return ctx.reply('👉 Ви обрали “Як підготувати сировину”. Інструкція…');
-    case '📝 Залишити заявку':
-      return ctx.reply('👉 Ви обрали “Залишити заявку”. Збираємо дані…');
-    case '❓ FAQ':
-      return ctx.reply('👉 Ви обрали “FAQ”. Питання та відповіді…');
-    case '🗣 Оператор':
-      return ctx.reply('👉 Ви обрали “Оператор”. Переадресуємо…');
-    default:
-      if (adminId && ctx.from && ctx.from.id === Number(adminId)) {
-        return ctx.api.sendMessage(adminId, `Новое сообщение от ${getUserFullName(ctx.from)}: ${ctx.message.text}`);
-      }
+  const isAdmin = ctx.chat.id === Number(adminId);
+
+  try {
+    if (isAdmin && ctx.msg.reply_to_message?.forward_origin?.type === 'user') {
+      const replyFromId = ctx.msg.reply_to_message.forward_origin.sender_user.id;
+      await ctx.api.sendMessage(replyFromId, ctx.msg.text);
+      return;
+    }
+
+    switch (txt) {
+      case '🎉 Хочу співпрацювати':
+        await ctx.conversation.enter('collaborateConversation')
+        break;
+      case '📍 Де здати сировину':
+        return ctx.reply('👉 Ви обрали “Де здати сировину”. Список точок…');
+      case '🚚 Виклик за сировиною':
+        return ctx.reply('👉 Ви обрали “Виклик за сировиною”. Питаємо адресу…');
+      case '💰 Ціни на сировину':
+        return ctx.reply('👉 Ви обрали “Ціни на сировину”. Отаке…');
+      case '🛠 Як підготувати сировину':
+        return ctx.reply('👉 Ви обрали “Як підготувати сировину”. Інструкція…');
+      case '📝 Залишити заявку':
+        return ctx.reply('👉 Ви обрали “Залишити заявку”. Збираємо дані…');
+      case '❓ FAQ':
+        return ctx.reply('👉 Ви обрали “FAQ”. Питання та відповіді…');
+      case '🗣 Оператор':
+        return ctx.reply('👉 Ви обрали “Оператор”. Переадресуємо…');
+      default:
+        if (!isAdmin) {
+          await ctx.api.forwardMessage(Number(adminId), ctx.chat.id, ctx.msg.message_id);
+
+          console.log('ctx.session?.timestampSendMessage', ctx.session?.timestampSendMessage)
+          if (!ctx.session?.timestampSendMessage || ctx.session.timestampSendMessage < Date.now() - 1000 * 20) {
+            ctx.session.timestampSendMessage = Date.now();
+            return ctx.reply(
+              `✅ Ваше повідомлення успішно відправлено!\n\n` +
+              `👋 Наша команда підтримки скоро з вами зв'яжеться\n` +
+              `⌛️ Зазвичай ми відповідаємо протягом кількох хвилин\n\n` +
+              `🙌 Дякуємо за терпіння!`
+            );
+
+          }
+
+        }
+    }
+  } catch (error) {
+    console.error('❌--Error in message handler:', error);
+    return ctx.reply(
+      `❌ Ой, щось пішло не так...\n\n` +
+      `🔄 Будь ласка, спробуйте ще раз через кілька хвилин\n` +
+      `💡 Якщо проблема повториться, зв'яжіться з нами через @support_username`
+    );
   }
 });
 
@@ -140,6 +157,8 @@ async function init() {
     await mongoose.connect(MONGODB_URI);
     // await googleSheets.initialize();
     bot.start();
+
+    // await bot.api.sendMessage(+adminId, '✅ Bot started');
 
     console.log('✅--MongoDB connected & bot started');
   } catch (error) {
