@@ -1,12 +1,10 @@
 import {conversations, createConversation} from '@grammyjs/conversations';
-import { Bot, GrammyError, HttpError, type Context, session, type SessionFlavor } from "grammy";
+import { Bot, GrammyError, HttpError, session } from "grammy";
 import { collaborateConversation } from "./conversations/collaborate";
-import {mainMenuKeyboard} from './keyboards/replyKeyboards';
-import {getUserFullName} from './utils/getUserFullName';
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import type {MyContext, MySession} from './types/types';
-import {commandStart} from './commands/index.js';
+import {commandStart, commandSupport, commandAdmin, commandMenu, commandContacts} from './commands/index.js';
 
 
 const token = process.env.BOT_TOKEN;
@@ -41,59 +39,11 @@ bot.api.setMyCommands([
 ])
 
 bot.command('start', commandStart);
+bot.command('admin', commandAdmin);
+bot.command('menu', commandMenu);
+bot.command('support', commandSupport);
+bot.command('contacts', commandContacts);
 
-bot.command('menu', async (ctx) => {
-  await ctx.reply(
-    'Оберіть необхідний розділ з меню нижче 👇',
-    { reply_markup: mainMenuKeyboard }
-  );
-});
-
-bot.command('support', async (ctx) => {
-  await ctx.reply(
-    `📝 Будь ласка, опишіть ваше питання:\n\n` +
-    `• Чим можемо допомогти?\n` +
-    `• Вкажіть деталі проблеми\n` +
-    `• Додайте скріншот, якщо потрібно\n\n` +
-    `⌛ Зазвичай ми відповідаємо протягом кількох хвилин \n` +
-    `✨ Дякуємо за звернення!`
-  );
-
-  ctx.session.timestampSendMessage = Date.now();
-
-  const adminMessage =
-    `🔔 Нове звернення до підтримки!\n\n` +
-    `👤 Користувач: ${ctx.from?.username || ctx.from?.first_name || 'Анонім'}\n` +
-    `🆔 ID: ${ctx.from?.id}\n` +
-    `📅 Час: ${new Date().toLocaleString('uk-UA')}\n\n` +
-    `⏳ Очікує на відповідь...`;
-
-  await ctx.api.sendMessage(+adminId, adminMessage);
-  await ctx.api.forwardMessage(+adminId, ctx.chat.id, ctx.msg.message_id);
-});
-
-bot.command('contacts', async (ctx) => {
-  await ctx.reply('contacts');
-});
-
-bot.command('admin', async (ctx) => {
-  if (!adminId) {
-    console.error('❌--empty ADMIN_ID in .env');
-    return;
-  }
-
-  if (!ctx.from) {
-    console.error('❌--ctx.from is undefined');
-    return;
-  }
-
-  if (adminId === String(ctx.from.id)) {
-    await ctx.reply('Welcome, admin!');
-  } else {
-    console.log(`❌--User ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`);
-    await ctx.api.sendMessage(adminId, `Користувач ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) намагався отримати доступ до адміністративної команди.`);
-  }
-});
 
 bot.on("edited_message", async (ctx) => {
   // Get the new, edited, text of the message.
