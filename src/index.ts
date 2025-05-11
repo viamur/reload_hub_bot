@@ -101,6 +101,10 @@ bot.on("edited_message", async (ctx) => {
   console.log(`editedText: ${editedText}`);
 });
 
+bot.hears('🎉 Хочу співпрацювати', async (ctx) => {
+  await ctx.conversation.enter('collaborateConversation')
+})
+
 bot.on('message:text', async ctx => {
   const txt = ctx.message.text;
   const isAdmin = ctx.chat.id === Number(adminId);
@@ -113,9 +117,6 @@ bot.on('message:text', async ctx => {
     }
 
     switch (txt) {
-      case '🎉 Хочу співпрацювати':
-        await ctx.conversation.enter('collaborateConversation')
-        break;
       case '📍 Де здати сировину':
         return ctx.reply('👉 Ви обрали “Де здати сировину”. Список точок…');
       case '🚚 Виклик за сировиною':

@@ -4,6 +4,8 @@ export interface IUser extends Document {
   telegramId: number;
   firstName: string;
   username: string;
+  phone: string;
+  comment: string;
   startBotAttempts: number;
   createdAt: Date;
 }
@@ -18,6 +20,12 @@ const userSchema = new Schema<IUser>({
     type: String
   },
   username: {
+    type: String
+  },
+  phone: {
+    type: String
+  },
+  comment: {
     type: String
   },
   startBotAttempts: {
