@@ -34,21 +34,46 @@ bot.use(session({ initial }))
 bot.use(createConversation(collaborateConversation));
 
 bot.api.setMyCommands([
-  { command: 'main_menu', description: 'Головне Меню 📍' },
-  { command: 'help',  description: 'Допомога ❓' }, // TODO: add contacts
+  { command: 'start', description: '🏠 Почати спочатку' },
+  { command: 'menu', description: '📍 Головне меню' },
+  { command: 'support', description: '💬 Зв\'язатися з підтримкою' },
+  { command: 'contacts', description: '📱 Наші контакти' },
 ])
 
 bot.command('start', commandStart);
 
-bot.command('main_menu', async (ctx) => {
+bot.command('menu', async (ctx) => {
   await ctx.reply(
     'Оберіть необхідний розділ з меню нижче 👇',
     { reply_markup: mainMenuKeyboard }
   );
 });
 
-bot.command('help', async (ctx) => {
-  await ctx.reply('help');
+bot.command('support', async (ctx) => {
+  await ctx.reply(
+    `📝 Будь ласка, опишіть ваше питання:\n\n` +
+    `• Чим можемо допомогти?\n` +
+    `• Вкажіть деталі проблеми\n` +
+    `• Додайте скріншот, якщо потрібно\n\n` +
+    `⌛ Зазвичай ми відповідаємо протягом кількох хвилин \n` +
+    `✨ Дякуємо за звернення!`
+  );
+
+  ctx.session.timestampSendMessage = Date.now();
+
+  const adminMessage =
+    `🔔 Нове звернення до підтримки!\n\n` +
+    `👤 Користувач: ${ctx.from?.username || ctx.from?.first_name || 'Анонім'}\n` +
+    `🆔 ID: ${ctx.from?.id}\n` +
+    `📅 Час: ${new Date().toLocaleString('uk-UA')}\n\n` +
+    `⏳ Очікує на відповідь...`;
+
+  await ctx.api.sendMessage(+adminId, adminMessage);
+  await ctx.api.forwardMessage(+adminId, ctx.chat.id, ctx.msg.message_id);
+});
+
+bot.command('contacts', async (ctx) => {
+  await ctx.reply('contacts');
 });
 
 bot.command('admin', async (ctx) => {
