@@ -1,10 +1,11 @@
 import {conversations, createConversation} from '@grammyjs/conversations';
-import { Bot, GrammyError, HttpError, session } from "grammy";
+import {Bot, GrammyError, HttpError, InlineKeyboard, InputFile, session} from 'grammy';
 import { collaborateConversation } from "./conversations/collaborate";
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import type {MyContext, MySession} from './types/types';
 import {commandStart, commandSupport, commandAdmin, commandMenu, commandContacts} from './commands/index.js';
+import path from 'path';
 
 
 const token = process.env.BOT_TOKEN;
@@ -55,6 +56,52 @@ bot.hears('🎉 Хочу співпрацювати', async (ctx) => {
   await ctx.conversation.enter('collaborateConversation')
 })
 
+bot.hears('📍 Локація', async (ctx) => {
+  const filePath = path.resolve(__dirname, './assets/reload_hub_map.jpg');
+
+  await ctx.replyWithPhoto(new InputFile(filePath));
+  await ctx.reply(
+    '♻️ ReLoad Hub\n' +
+    '🕐 Пн–Пт: 10:00–19:00\n' +
+    '🕐 Сб: 10:00–14:00\n\n' +
+    '📍 вулиця Степана Тільги, 34д, Кривий Ріг',
+    {
+      reply_markup: new InlineKeyboard().url(
+        'Відкрити в Google Maps',
+        'https://maps.app.goo.gl/39eRpcrv59hNyftx9'
+      )
+    }
+  );
+})
+
+bot.hears('🚚 Виклик за сировиною', async (ctx) => {
+  console.log('🚚 Виклик за сировиною')
+})
+
+bot.hears('🛠 Як підготувати сировину', async (ctx) => {
+  console.log('🛠 Як підготувати сировину')
+})
+
+bot.hears('💰 Ціни на сировину', async (ctx) => {
+  console.log('💰 Ціни на сировину')
+})
+
+bot.hears('📝 Контакти', async (ctx) => {
+  await ctx.reply(
+    `📍 <b>ReLoad Hub</b>\n` +
+    `♻️ Пункт прийому вторсировини\n\n` +
+    `🕐 <b>Графік:</b>\nПн–Пт: 10:00–19:00\nСб: 10:00–14:00\n\n` +
+    `📞 <b>Телефон:</b> <a href="tel:+380686593591">068 659 3591</a>\n` +
+    `📸 <b>Instagram:</b> <a href="https://instagram.com/reload_hub">@reload_hub</a>\n` +
+    `🎵 <b>TikTok:</b> <a href="https://tiktok.com/@reloadhubkr">@reloadhubkr</a>\n\n` +
+    `📦 <i>Надсилай Новою поштою або принось особисто!</i>`,
+    {
+      parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard().text('📍 Показати локацію', 'show_location')
+    }
+  );
+});
+
 bot.on('message:text', async ctx => {
   const txt = ctx.message.text;
   const isAdmin = ctx.chat.id === Number(adminId);
@@ -66,38 +113,21 @@ bot.on('message:text', async ctx => {
       return;
     }
 
-    switch (txt) {
-      case '📍 Де здати сировину':
-        return ctx.reply('👉 Ви обрали “Де здати сировину”. Список точок…');
-      case '🚚 Виклик за сировиною':
-        return ctx.reply('👉 Ви обрали “Виклик за сировиною”. Питаємо адресу…');
-      case '💰 Ціни на сировину':
-        return ctx.reply('👉 Ви обрали “Ціни на сировину”. Отаке…');
-      case '🛠 Як підготувати сировину':
-        return ctx.reply('👉 Ви обрали “Як підготувати сировину”. Інструкція…');
-      case '📝 Залишити заявку':
-        return ctx.reply('👉 Ви обрали “Залишити заявку”. Збираємо дані…');
-      case '❓ FAQ':
-        return ctx.reply('👉 Ви обрали “FAQ”. Питання та відповіді…');
-      case '🗣 Оператор':
-        return ctx.reply('👉 Ви обрали “Оператор”. Переадресуємо…');
-      default:
-        if (!isAdmin) {
-          await ctx.api.forwardMessage(Number(adminId), ctx.chat.id, ctx.msg.message_id);
+    if (!isAdmin) {
+      await ctx.api.forwardMessage(Number(adminId), ctx.chat.id, ctx.msg.message_id);
 
-          console.log('ctx.session?.timestampSendMessage', ctx.session?.timestampSendMessage)
-          if (!ctx.session?.timestampSendMessage || ctx.session.timestampSendMessage < Date.now() - 1000 * 20) {
-            ctx.session.timestampSendMessage = Date.now();
-            return ctx.reply(
-              `✅ Ваше повідомлення успішно відправлено!\n\n` +
-              `👋 Наша команда підтримки скоро з вами зв'яжеться\n` +
-              `⌛️ Зазвичай ми відповідаємо протягом кількох хвилин\n\n` +
-              `🙌 Дякуємо за терпіння!`
-            );
+      console.log('ctx.session?.timestampSendMessage', ctx.session?.timestampSendMessage)
+      if (!ctx.session?.timestampSendMessage || ctx.session.timestampSendMessage < Date.now() - 1000 * 20) {
+        ctx.session.timestampSendMessage = Date.now();
+        return ctx.reply(
+          `✅ Ваше повідомлення успішно відправлено!\n\n` +
+          `👋 Наша команда підтримки скоро з вами зв'яжеться\n` +
+          `⌛️ Зазвичай ми відповідаємо протягом кількох хвилин\n\n` +
+          `🙌 Дякуємо за терпіння!`
+        );
 
-          }
+      }
 
-        }
     }
   } catch (error) {
     console.error('❌--Error in message handler:', error);
