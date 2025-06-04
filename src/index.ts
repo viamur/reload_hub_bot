@@ -4,8 +4,16 @@ import { collaborateConversation } from "./conversations/collaborate";
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import type {MyContext, MySession} from './types/types';
-import {commandStart, commandSupport, commandAdmin, commandMenu, commandContacts, commandLocation, commandCollaborate} from './commands/index.js';
-import path from 'path';
+import {
+  commandStart,
+  commandSupport,
+  commandAdmin,
+  commandMenu,
+  commandContacts,
+  commandLocation,
+  commandCollaborate,
+  commandPrepareMaterials
+} from './commands/index.js';
 
 
 const token = process.env.BOT_TOKEN;
@@ -52,16 +60,13 @@ bot.on("edited_message", async (ctx) => {
   console.log(`editedText: ${editedText}`);
 });
 
+bot.hears('🛠 Як підготувати сировину', commandPrepareMaterials)
 bot.hears('🎉 Хочу співпрацювати', commandCollaborate)
 bot.hears('📍 Локація', commandLocation)
 bot.hears('📝 Контакти', commandContacts);
 
 bot.hears('🚚 Виклик за сировиною', async (ctx) => {
   console.log('🚚 Виклик за сировиною')
-})
-
-bot.hears('🛠 Як підготувати сировину', async (ctx) => {
-  console.log('🛠 Як підготувати сировину')
 })
 
 bot.hears('💰 Ціни на сировину', async (ctx) => {
