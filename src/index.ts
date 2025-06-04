@@ -4,7 +4,7 @@ import { collaborateConversation } from "./conversations/collaborate";
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import type {MyContext, MySession} from './types/types';
-import {commandStart, commandSupport, commandAdmin, commandMenu, commandContacts} from './commands/index.js';
+import {commandStart, commandSupport, commandAdmin, commandMenu, commandContacts, commandLocation, commandCollaborate} from './commands/index.js';
 import path from 'path';
 
 
@@ -52,27 +52,9 @@ bot.on("edited_message", async (ctx) => {
   console.log(`editedText: ${editedText}`);
 });
 
-bot.hears('🎉 Хочу співпрацювати', async (ctx) => {
-  await ctx.conversation.enter('collaborateConversation')
-})
-
-bot.hears('📍 Локація', async (ctx) => {
-  const filePath = path.resolve(__dirname, './assets/reload_hub_map.jpg');
-
-  await ctx.replyWithPhoto(new InputFile(filePath));
-  await ctx.reply(
-    '♻️ ReLoad Hub\n' +
-    '🕐 Пн–Пт: 10:00–19:00\n' +
-    '🕐 Сб: 10:00–14:00\n\n' +
-    '📍 вулиця Степана Тільги, 34д, Кривий Ріг',
-    {
-      reply_markup: new InlineKeyboard().url(
-        'Відкрити в Google Maps',
-        'https://maps.app.goo.gl/39eRpcrv59hNyftx9'
-      )
-    }
-  );
-})
+bot.hears('🎉 Хочу співпрацювати', commandCollaborate)
+bot.hears('📍 Локація', commandLocation)
+bot.hears('📝 Контакти', commandContacts);
 
 bot.hears('🚚 Виклик за сировиною', async (ctx) => {
   console.log('🚚 Виклик за сировиною')
@@ -86,24 +68,13 @@ bot.hears('💰 Ціни на сировину', async (ctx) => {
   console.log('💰 Ціни на сировину')
 })
 
-bot.hears('📝 Контакти', async (ctx) => {
-  await ctx.reply(
-    `📍 <b>ReLoad Hub</b>\n` +
-    `♻️ Пункт прийому вторсировини\n\n` +
-    `🕐 <b>Графік:</b>\nПн–Пт: 10:00–19:00\nСб: 10:00–14:00\n\n` +
-    `📞 <b>Телефон:</b> <a href="tel:+380686593591">068 659 3591</a>\n` +
-    `📸 <b>Instagram:</b> <a href="https://instagram.com/reload_hub">@reload_hub</a>\n` +
-    `🎵 <b>TikTok:</b> <a href="https://tiktok.com/@reloadhubkr">@reloadhubkr</a>\n\n` +
-    `📦 <i>Надсилай Новою поштою або принось особисто!</i>`,
-    {
-      parse_mode: 'HTML',
-      reply_markup: new InlineKeyboard().text('📍 Показати локацію', 'show_location')
-    }
-  );
+
+bot.callbackQuery('show_location', async (ctx) => {
+  await commandLocation(ctx);
+  await ctx.answerCallbackQuery();
 });
 
 bot.on('message:text', async ctx => {
-  const txt = ctx.message.text;
   const isAdmin = ctx.chat.id === Number(adminId);
 
   try {
