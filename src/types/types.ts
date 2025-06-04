@@ -3,6 +3,7 @@ import type {ConversationFlavor} from '@grammyjs/conversations';
 
 export type MySession = {
   collab: { type: string; region: string; contact: string };
+  pickup: { phone: string; weight: string; photoFileId: string; region: string}
   timestampSendMessage?: number;
 }
 

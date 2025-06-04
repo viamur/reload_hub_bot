@@ -3,7 +3,7 @@ import {Bot, GrammyError, HttpError, InlineKeyboard, InputFile, session} from 'g
 import { collaborateConversation } from "./conversations/collaborate";
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import type {MyContext, MySession} from './types/types';
+import type {MyContext} from './types/types';
 import {
   commandStart,
   commandSupport,
@@ -12,8 +12,11 @@ import {
   commandContacts,
   commandLocation,
   commandCollaborate,
-  commandPrepareMaterials
+  commandPrepareMaterials,
+  commandPickupRequest
 } from './commands/index.js';
+import {generateSessionState} from './session/generateSessionState';
+import {pickupRequestConversation} from './conversations/pickup-request-conversation';
 
 
 const token = process.env.BOT_TOKEN;
@@ -23,22 +26,12 @@ if (!token) {
   process.exit(1);
 }
 
-// Install session middleware, and define the initial session value.
-function initial(): MySession {
-  return {
-    collab: {
-      type: "",
-      region: "",
-      contact: "",
-    }
-  };
-}
-
 const bot = new Bot<MyContext>(token);
 
 bot.use(conversations());
-bot.use(session({ initial }))
+bot.use(session({ initial: generateSessionState }))
 bot.use(createConversation(collaborateConversation));
+bot.use(createConversation(pickupRequestConversation));
 
 bot.api.setMyCommands([
   { command: 'start', description: '🏠 Почати спочатку' },
@@ -53,21 +46,11 @@ bot.command('menu', commandMenu);
 bot.command('support', commandSupport);
 bot.command('contacts', commandContacts);
 
-
-bot.on("edited_message", async (ctx) => {
-  // Get the new, edited, text of the message.
-  const editedText = ctx.msg.text;
-  console.log(`editedText: ${editedText}`);
-});
-
 bot.hears('🛠 Як підготувати сировину', commandPrepareMaterials)
 bot.hears('🎉 Хочу співпрацювати', commandCollaborate)
 bot.hears('📍 Локація', commandLocation)
+bot.hears('🚚 Виклик за сировиною', commandPickupRequest)
 bot.hears('📝 Контакти', commandContacts);
-
-bot.hears('🚚 Виклик за сировиною', async (ctx) => {
-  console.log('🚚 Виклик за сировиною')
-})
 
 bot.hears('💰 Ціни на сировину', async (ctx) => {
   console.log('💰 Ціни на сировину')
@@ -77,6 +60,12 @@ bot.hears('💰 Ціни на сировину', async (ctx) => {
 bot.callbackQuery('show_location', async (ctx) => {
   await commandLocation(ctx);
   await ctx.answerCallbackQuery();
+});
+
+bot.on("edited_message", async (ctx) => {
+  // Get the new, edited, text of the message.
+  const editedText = ctx.msg.text;
+  console.log(`editedText: ${editedText}`);
 });
 
 bot.on('message:text', async ctx => {

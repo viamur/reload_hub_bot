@@ -9,6 +9,7 @@ import {business_options, district_options} from '../data/options';
 import {User} from '../models/User';
 import {Collaboration} from '../models/Collaboration';
 import {generateCode} from '../utils/generateCode';
+import {generateSessionState} from '../session/generateSessionState';
 require('dotenv').config();
 
 export async function collaborateConversation(
@@ -16,7 +17,7 @@ export async function collaborateConversation(
   ctx: MyContext
 ) {
   if (!ctx.session) {
-    ctx.session = {collab: { type: "", region: "", contact: "" }};
+    ctx.session = generateSessionState();
   }
 
   // BUSINESS TYPE
