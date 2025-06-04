@@ -9,7 +9,7 @@ export function generateSessionState(): MySession {
     },
     pickup: {
       phone: "",
-      weight: "",
+      weight: 0,
       photoFileId: "",
       region: ""
     },

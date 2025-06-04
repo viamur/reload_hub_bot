@@ -1,9 +1,10 @@
-import { Conversation } from "@grammyjs/conversations";
-import { MyContext } from "../types/types";
-import { shareContactKeyboard, mainMenuKeyboard } from "../keyboards/replyKeyboards";
-import { InlineKeyboard } from "grammy";
-import { district_options } from "../data/options";
+import {Conversation} from '@grammyjs/conversations';
+import {MyContext} from '../types/types';
+import {mainMenuKeyboard, shareContactKeyboard} from '../keyboards/replyKeyboards';
+import {InlineKeyboard} from 'grammy';
+import {district_options} from '../data/options';
 import {generateSessionState} from '../session/generateSessionState';
+
 require("dotenv").config();
 
 export async function pickupRequestConversation(
@@ -32,28 +33,50 @@ export async function pickupRequestConversation(
   });
 
   // WEIGHT
-  await ctx.reply("⚖️ Вкажіть орієнтовну масу сировини (наприклад: 5 кг):", {  });
+  await ctx.reply("⚖️ Вкажіть орієнтовну масу сировини в кг (наприклад: 5.5):");
 
-  const weightUpdate = await conversation.form.text();
-  ctx.session.pickup.weight = weightUpdate;
+  while (true) {
+    const weightInput = await conversation.form.text();
+    const parsed = parseFloat(weightInput.trim().replace(",", "."));
+
+    if (!isNaN(parsed) && parsed > 0) {
+      ctx.session.pickup.weight = parsed;
+      break;
+    }
+
+    await ctx.reply("❗ Введіть, будь ласка, число. Наприклад: 3 або 7.5");
+  }
 
   // PHOTO
-  await ctx.reply("📷 Надішліть фотографію сировини:");
-
-  const photoUpdate = await conversation.waitFor("message:photo", {
-    otherwise: async (ctx) => {
-      await ctx.reply("❗ Надішліть саме фото, будь ласка.");
-    },
+  await ctx.reply("📷 Хочете прикріпити фотографію сировини?", {
+    reply_markup: new InlineKeyboard()
+      .text('Так, надіслати фото', 'add_photo').row()
+      .text('Ні, пропустити фото', 'skip_photo')
   });
 
-  const largestPhoto = photoUpdate.message.photo?.at(-1);
-  ctx.session.pickup.photoFileId = largestPhoto?.file_id || ""
+  const photoOption = await conversation.waitForCallbackQuery(/^add_photo$|^skip_photo$/);
+  await photoOption.answerCallbackQuery();
 
-  await ctx.reply('✅ Фотографія отримана!')
+  if (photoOption.callbackQuery.data === 'skip_photo') {
+    ctx.session.pickup.photoFileId = "";
+    await photoOption.editMessageText('📷❌ Фотографія пропущена.');
+  } else if (photoOption.callbackQuery.data === 'add_photo') {
+    await photoOption.editMessageText('📷 Будь ласка, надішліть фотографію сировини:');
+    const photoUpdate = await conversation.waitFor("message:photo", {
+      otherwise: async (ctx) => {
+        await ctx.reply("❗ Надішліть саме фото, будь ласка.");
+      },
+    });
+
+    const largestPhoto = photoUpdate.message.photo?.at(-1);
+    ctx.session.pickup.photoFileId = largestPhoto?.file_id || ""
+
+    await ctx.reply('✅ Фотографія отримана!')
+  }
 
   // DISTRICT
-  await ctx.reply("📍 *Оберіть район:*", { parse_mode: "Markdown" });
-  await ctx.reply("Виберіть один з варіантів:", {
+  await ctx.reply("📍 *Оберіть район:*", {
+    parse_mode: "Markdown",
     reply_markup: InlineKeyboard.from(
       district_options.map((btn) => [InlineKeyboard.text(btn, `pickup_district:${btn}`)])
     ),
@@ -77,7 +100,7 @@ export async function pickupRequestConversation(
   await ctx.reply(
     `✅ *Ваш запит:*\n\n` +
     `📞 Телефон: +${ctx.session.pickup.phone}\n` +
-    `⚖️ Маса: ${ctx.session.pickup.weight}\n` +
+    `⚖️ Маса: ${ctx.session.pickup.weight}кг\n` +
     `📍 Район: ${ctx.session.pickup.region}`,
     { parse_mode: "Markdown" }
   );
@@ -90,7 +113,7 @@ export async function pickupRequestConversation(
         `🔗 *Telegram:* @${ctx.from.username || "-"}\n` +
         `🆔 *User ID:* ${ctx.from.id}\n\n` +
         `📞 Телефон: +${ctx.session.pickup.phone}\n` +
-        `⚖️ Маса: ${ctx.session.pickup.weight}\n` +
+        `⚖️ Маса: ${ctx.session.pickup.weight}кг\n` +
         `📍 Район: ${ctx.session.pickup.region}\n\n` +
         `🕓 *Дата:* ${new Date().toLocaleString("uk-UA", {
           year: "numeric",
