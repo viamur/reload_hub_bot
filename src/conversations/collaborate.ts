@@ -44,8 +44,8 @@ export async function collaborateConversation(
   // DISTRICT
   // DISTRICT
   // DISTRICT
-  await ctx.reply("📍 *Оберіть район:*", { parse_mode: "Markdown" });
-  await ctx.reply("Виберіть один з варіантів:", {
+  await ctx.reply("📍 *Оберіть район:*", {
+    parse_mode: "Markdown",
     reply_markup: InlineKeyboard.from(
       district_options.map((btn) => [InlineKeyboard.text(btn, `district:${btn}`)])
     ),
