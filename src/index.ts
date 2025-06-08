@@ -17,6 +17,7 @@ import {
 } from './commands/index.js';
 import {generateSessionState} from './session/generateSessionState';
 import {pickupRequestConversation} from './conversations/pickup-request-conversation';
+import {initMaterialPrices} from './seed/MaterialPrice';
 
 
 const token = process.env.BOT_TOKEN;
@@ -126,6 +127,7 @@ async function init() {
 
   try {
     await mongoose.connect(MONGODB_URI);
+    await initMaterialPrices();
     // await googleSheets.initialize();
     bot.start();
 

@@ -11,7 +11,9 @@ export function generateSessionState(): MySession {
       phone: "",
       weight: 0,
       photoFileId: "",
-      region: ""
+      region: "",
+      materialId: "",
+      materialName: "",
     },
   };
 }
