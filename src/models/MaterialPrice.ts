@@ -1,9 +1,12 @@
 import { Document, Schema, model } from 'mongoose';
 
+export type MaterialUnit = "kg" | "pallet" | "m3" | "piece" | "bag";
+const materialEnums: MaterialUnit[] = ["kg", "pallet", "m3", "piece", "bag"];
+
 export interface IMaterialPrice extends Document {
   name: string;
   description: string;
-  unit: "kg" | "pallet" | "m3" | "piece" | "bag";
+  unit: MaterialUnit;
   price: number;
   active: boolean;
   createdAt: Date;
@@ -22,7 +25,7 @@ const materialPriceSchema = new Schema<IMaterialPrice>({
   },
   unit: {
     type: String,
-    enum: ["kg", "pallet", "m3", "piece", "bag"],
+    enum: materialEnums,
     default: "kg"
   },
   price: {

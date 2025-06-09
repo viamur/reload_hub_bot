@@ -1,6 +1,6 @@
 import {conversations, createConversation} from '@grammyjs/conversations';
-import {Bot, GrammyError, HttpError, InlineKeyboard, InputFile, session} from 'grammy';
-import { collaborateConversation } from "./conversations/collaborate";
+import {Bot, GrammyError, HttpError, InlineKeyboard, InputFile, MiddlewareFn, session} from 'grammy';
+import { collaborateConversation } from "./conversations/collaborate-conversation";
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import type {MyContext} from './types/types';
@@ -13,12 +13,13 @@ import {
   commandLocation,
   commandCollaborate,
   commandPrepareMaterials,
-  commandPickupRequest
+  commandPickupRequest,
+  commandPrice
 } from './commands/index.js';
 import {generateSessionState} from './session/generateSessionState';
 import {pickupRequestConversation} from './conversations/pickup-request-conversation';
 import {initMaterialPrices} from './seed/MaterialPrice';
-
+import {exitConversationOnCommand} from './middlewares/exit-conversation-on-command';
 
 const token = process.env.BOT_TOKEN;
 const adminId = process.env.ADMIN_ID;
@@ -30,6 +31,7 @@ if (!token) {
 const bot = new Bot<MyContext>(token);
 
 bot.use(conversations());
+bot.use(exitConversationOnCommand);
 bot.use(session({ initial: generateSessionState }))
 bot.use(createConversation(collaborateConversation));
 bot.use(createConversation(pickupRequestConversation));
@@ -52,14 +54,15 @@ bot.hears('🎉 Хочу співпрацювати', commandCollaborate)
 bot.hears('📍 Локація', commandLocation)
 bot.hears('🚚 Виклик за сировиною', commandPickupRequest)
 bot.hears('📝 Контакти', commandContacts);
-
-bot.hears('💰 Ціни на сировину', async (ctx) => {
-  console.log('💰 Ціни на сировину')
-})
-
+bot.hears('💰 Ціни на сировину',commandPrice)
 
 bot.callbackQuery('show_location', async (ctx) => {
   await commandLocation(ctx);
+  await ctx.answerCallbackQuery();
+});
+
+bot.callbackQuery('contacts', async (ctx) => {
+  await commandContacts(ctx);
   await ctx.answerCallbackQuery();
 });
 

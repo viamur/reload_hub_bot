@@ -5,7 +5,12 @@ import {MyContext} from '../types/types';
 export async function commandLocation(ctx: MyContext) {
   const filePath = path.resolve(__dirname, '../assets/reload_hub_map.jpg');
 
-  await ctx.replyWithPhoto(new InputFile(filePath));
+  await ctx.replyWithPhoto(new InputFile(filePath), {
+    reply_markup: {
+      remove_keyboard: true
+    }
+  });
+
   await ctx.reply(
     '♻️ ReLoad Hub\n' +
     '🕐 Пн–Пт: 10:00–19:00\n' +
@@ -15,7 +20,7 @@ export async function commandLocation(ctx: MyContext) {
       reply_markup: new InlineKeyboard().url(
         'Відкрити в Google Maps',
         'https://maps.app.goo.gl/39eRpcrv59hNyftx9'
-      )
+      ).row().text('📝 Контакти', 'contacts')
     }
   );
 }
