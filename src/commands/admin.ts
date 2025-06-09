@@ -16,7 +16,11 @@ export async function commandAdmin(ctx: CommandContext<MyContext>) {
 
   if (+adminId === ctx.from.id) {
     await ctx.reply('Привіт, Адмін!', {
-      reply_markup: new InlineKeyboard().text('Змінити ціни', 'change_prices')
+      reply_markup: new InlineKeyboard()
+        .text('➕ Додати Сировину', 'create_material').row()
+        .text('🛠 Редагування Сировини', 'update_material').row()
+        .text('📊 Статистика за день', 'daily_stats').row()
+        .text('📅 Статистика за місяць', 'monthly_stats').row()
     });
   } else {
     console.log(`❌--User ${ctx.from.first_name} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`);

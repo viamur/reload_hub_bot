@@ -5,7 +5,7 @@ export const exitConversationOnCommand: MiddlewareFn<MyContext> = async (ctx, ne
   if (ctx.message?.text?.startsWith("/")) {
     if ("conversation" in ctx) {
       await ctx.conversation.exit('pickupRequestConversation');
-      await ctx.conversation.exit('changePricesConversation');
+      await ctx.conversation.exit('updateMaterialConversation');
       await ctx.conversation.exit('collaborateConversation');
     }
   }

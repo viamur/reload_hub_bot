@@ -18,7 +18,7 @@ import {
 } from './commands/index.js';
 import {
   pickupRequestConversation,
-  changePricesConversation,
+  updateMaterialConversation,
   collaborateConversation
 } from './conversations/index.js';
 import {generateSessionState} from './session/generateSessionState';
@@ -39,7 +39,7 @@ bot.use(exitConversationOnCommand);
 bot.use(session({ initial: generateSessionState }))
 bot.use(createConversation(collaborateConversation));
 bot.use(createConversation(pickupRequestConversation));
-bot.use(createConversation(changePricesConversation));
+bot.use(createConversation(updateMaterialConversation));
 
 bot.api.setMyCommands([
   { command: 'start', description: '🏠 Почати спочатку' },
@@ -71,7 +71,7 @@ bot.callbackQuery('contacts', async (ctx) => {
   await ctx.answerCallbackQuery();
 });
 
-bot.callbackQuery('change_prices', commandChangePrices);
+bot.callbackQuery('update_material', commandChangePrices);
 
 bot.on("edited_message", async (ctx) => {
   // Get the new, edited, text of the message.
