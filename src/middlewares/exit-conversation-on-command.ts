@@ -7,6 +7,7 @@ export const exitConversationOnCommand: MiddlewareFn<MyContext> = async (ctx, ne
       await ctx.conversation.exit('pickupRequestConversation');
       await ctx.conversation.exit('updateMaterialConversation');
       await ctx.conversation.exit('collaborateConversation');
+      await ctx.conversation.exit('createMaterialConversation');
     }
   }
   await next();

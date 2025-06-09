@@ -8,4 +8,5 @@ export * from './collaborate.js';
 export * from './prepare-materials.js';
 export * from './pickup-request.js';
 export * from './price.js';
-export * from './change-prices.js'
+export * from './update-material.js'
+export * from './create-material.js'

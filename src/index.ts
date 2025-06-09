@@ -14,12 +14,14 @@ import {
   commandPrepareMaterials,
   commandPickupRequest,
   commandPrice,
-  commandChangePrices
+  commandUpdateMaterial,
+  commandCreateMaterial
 } from './commands/index.js';
 import {
   pickupRequestConversation,
   updateMaterialConversation,
-  collaborateConversation
+  collaborateConversation,
+  createMaterialConversation
 } from './conversations/index.js';
 import {generateSessionState} from './session/generateSessionState';
 import {initMaterialPrices} from './seed/MaterialPrice';
@@ -40,6 +42,7 @@ bot.use(session({ initial: generateSessionState }))
 bot.use(createConversation(collaborateConversation));
 bot.use(createConversation(pickupRequestConversation));
 bot.use(createConversation(updateMaterialConversation));
+bot.use(createConversation(createMaterialConversation));
 
 bot.api.setMyCommands([
   { command: 'start', description: '🏠 Почати спочатку' },
@@ -71,7 +74,9 @@ bot.callbackQuery('contacts', async (ctx) => {
   await ctx.answerCallbackQuery();
 });
 
-bot.callbackQuery('update_material', commandChangePrices);
+// Admin commands
+bot.callbackQuery('create_material', commandCreateMaterial);
+bot.callbackQuery('update_material', commandUpdateMaterial);
 
 bot.on("edited_message", async (ctx) => {
   // Get the new, edited, text of the message.

@@ -4,25 +4,23 @@ import {mainMenuKeyboard, shareContactKeyboard} from '../keyboards/replyKeyboard
 import {InlineKeyboard} from 'grammy';
 import {unitDisplayMap} from '../data/options';
 import {MaterialPrice} from '../models/MaterialPrice';
+import {generateMessageMaterialList} from '../utils/generateMessage';
 require("dotenv").config();
 
 export async function updateMaterialConversation(
   conversation: Conversation<MyContext, MyContext>,
   ctx: MyContext
 ) {
+  const count = await MaterialPrice.countDocuments();
+  if (count === 0) {
+    await ctx.reply("❗ Немає жодної сировини для оновлення. Будь ласка, спочатку створіть сировину.");
+    return;
+  }
+
   while (true) {
     const materials = await MaterialPrice.find().lean();
 
-    const message =
-      "📦 <b>Всі матеріали з Бази Данних:</b>\n\n" +
-      materials
-        .map((m) => {
-          const unit = unitDisplayMap[m.unit] ?? m.unit;
-          return `🔹 <b>${m.name}</b>\n  ${m.price.toFixed(2)} грн / ${unit}\n  ${m.active ? '✅ Активний' : '❌ Неактивний'}`;
-        })
-        .join("\n\n");
-
-    await ctx.reply(message, { parse_mode: "HTML" });
+    await ctx.reply(generateMessageMaterialList(materials), { parse_mode: "HTML" });
 
     const keyboard = InlineKeyboard.from(materials.map((m) => [InlineKeyboard.text(m.name, `material:${m._id}`)]));
 
