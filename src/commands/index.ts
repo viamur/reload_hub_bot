@@ -10,3 +10,4 @@ export * from './pickup-request.js';
 export * from './price.js';
 export * from './update-material.js'
 export * from './create-material.js'
+export * from './stats.js';

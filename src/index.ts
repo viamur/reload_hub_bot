@@ -15,7 +15,9 @@ import {
   commandPickupRequest,
   commandPrice,
   commandUpdateMaterial,
-  commandCreateMaterial
+  commandCreateMaterial,
+  commandStatsToday,
+  commandStatsThisMonth
 } from './commands/index.js';
 import {
   pickupRequestConversation,
@@ -77,6 +79,8 @@ bot.callbackQuery('contacts', async (ctx) => {
 // Admin commands
 bot.callbackQuery('create_material', commandCreateMaterial);
 bot.callbackQuery('update_material', commandUpdateMaterial);
+bot.callbackQuery('daily_stats', commandStatsToday);
+bot.callbackQuery('monthly_stats', commandStatsThisMonth);
 
 bot.on("edited_message", async (ctx) => {
   // Get the new, edited, text of the message.
