@@ -1,6 +1,5 @@
 import {conversations, createConversation} from '@grammyjs/conversations';
-import {Bot, GrammyError, HttpError, InlineKeyboard, InputFile, MiddlewareFn, session} from 'grammy';
-import { collaborateConversation } from "./conversations/collaborate-conversation";
+import {Bot, GrammyError, HttpError, session} from 'grammy';
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import type {MyContext} from './types/types';
@@ -14,10 +13,15 @@ import {
   commandCollaborate,
   commandPrepareMaterials,
   commandPickupRequest,
-  commandPrice
+  commandPrice,
+  commandChangePrices
 } from './commands/index.js';
+import {
+  pickupRequestConversation,
+  changePricesConversation,
+  collaborateConversation
+} from './conversations/index.js';
 import {generateSessionState} from './session/generateSessionState';
-import {pickupRequestConversation} from './conversations/pickup-request-conversation';
 import {initMaterialPrices} from './seed/MaterialPrice';
 import {exitConversationOnCommand} from './middlewares/exit-conversation-on-command';
 
@@ -35,6 +39,7 @@ bot.use(exitConversationOnCommand);
 bot.use(session({ initial: generateSessionState }))
 bot.use(createConversation(collaborateConversation));
 bot.use(createConversation(pickupRequestConversation));
+bot.use(createConversation(changePricesConversation));
 
 bot.api.setMyCommands([
   { command: 'start', description: '🏠 Почати спочатку' },
@@ -65,6 +70,8 @@ bot.callbackQuery('contacts', async (ctx) => {
   await commandContacts(ctx);
   await ctx.answerCallbackQuery();
 });
+
+bot.callbackQuery('change_prices', commandChangePrices);
 
 bot.on("edited_message", async (ctx) => {
   // Get the new, edited, text of the message.

@@ -1,6 +1,5 @@
 import {MyContext} from '../types/types';
-import {CommandContext} from 'grammy';
-import {getUserFullName} from '../utils/getUserFullName';
+import {CommandContext, InlineKeyboard} from 'grammy';
 
 export async function commandAdmin(ctx: CommandContext<MyContext>) {
   const adminId = process.env.ADMIN_ID;
@@ -15,10 +14,12 @@ export async function commandAdmin(ctx: CommandContext<MyContext>) {
     return;
   }
 
-  if (adminId === String(ctx.from.id)) {
-    await ctx.reply('Welcome, admin!');
+  if (+adminId === ctx.from.id) {
+    await ctx.reply('Привіт, Адмін!', {
+      reply_markup: new InlineKeyboard().text('Змінити ціни', 'change_prices')
+    });
   } else {
-    console.log(`❌--User ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`);
-    await ctx.api.sendMessage(adminId, `Користувач ${getUserFullName(ctx.from)} (${ctx.from.id} - ${ctx.from.username}) намагався отримати доступ до адміністративної команди.`);
+    console.log(`❌--User ${ctx.from.first_name} (${ctx.from.id} - ${ctx.from.username}) tried to access admin command.`);
+    await ctx.api.sendMessage(adminId, `Користувач ${ctx.from.first_name} (${ctx.from.id} - ${ctx.from.username}) намагався отримати доступ до адміністративної команди.`);
   }
 }

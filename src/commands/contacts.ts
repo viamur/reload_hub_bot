@@ -1,6 +1,5 @@
 import {MyContext} from '../types/types';
-import {CommandContext, InlineKeyboard} from 'grammy';
-import {getUserFullName} from '../utils/getUserFullName';
+import {InlineKeyboard} from 'grammy';
 
 export async function commandContacts(ctx: MyContext) {
   await ctx.reply(
