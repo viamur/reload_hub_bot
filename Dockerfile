@@ -19,6 +19,9 @@ COPY . .
 # Собираем TypeScript
 RUN npm run build
 
+# Копируем ассеты отдельно в dist
+RUN mkdir -p dist/assets && cp -r src/assets/* dist/assets/
+
 # Задаём команду, которая будет выполняться при запуске контейнера
 # Для dev-режима может быть и "npm run dev", но сейчас для примера укажем старт продакшн-сборки
 CMD ["npm", "run", "start:prod"]
