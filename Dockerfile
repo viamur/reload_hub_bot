@@ -1,6 +1,9 @@
 # Базовый образ Node.js (легковесная версия на Alpine Linux)
 FROM node:18-alpine
 
+# Увеличиваем лимит памяти для Node.js (например, 2048 или 3072 МБ)
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 # Создаём рабочую директорию в контейнере
 WORKDIR /app
 
