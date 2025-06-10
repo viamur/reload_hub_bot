@@ -1,5 +1,4 @@
 import {MyContext} from '../types/types';
-import {CommandContext} from 'grammy';
 import {generateAdminStatsMessage} from '../utils/generateMessage';
 import {User} from '../models/User';
 import {PickupRequest} from '../models/PickupRequest';
@@ -80,7 +79,7 @@ export async function commandStats(start: Date, end: Date, ctx: MyContext) {
   await ctx.reply(message, { parse_mode: "HTML" });
 }
 
-export const commandStatsToday = async (ctx: CommandContext<MyContext>) => {
+export const commandStatsToday = async (ctx: MyContext) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -90,7 +89,7 @@ export const commandStatsToday = async (ctx: CommandContext<MyContext>) => {
   await commandStats(today, tomorrow, ctx);
 }
 
-export const commandStatsThisMonth = async (ctx: CommandContext<MyContext>) => {
+export const commandStatsThisMonth = async (ctx: MyContext) => {
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
